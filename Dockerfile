@@ -12,13 +12,6 @@ RUN wget https://storage.googleapis.com/kubernetes-release/release/v1.1.7/bin/li
 RUN chmod +x kubectl
 RUN mv kubectl /usr/local/bin/
 
-# Add some helper scripts for getting and saving scripts later
-ADD fetch_certs.sh /letsencrypt/
-ADD save_certs.sh /letsencrypt/
-ADD recreate_pods.sh /letsencrypt/
-ADD refresh_certs.sh /letsencrypt/
-ADD start.sh /letsencrypt/
-
 RUN ln -s /root/.local/share/letsencrypt/bin/letsencrypt /usr/local/bin/letsencrypt
 
 WORKDIR /letsencrypt
