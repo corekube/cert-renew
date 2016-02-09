@@ -1,0 +1,61 @@
+build:
+  box: 
+    id: $DOCKER_REPO
+    tag: $DOCKER_TAG
+    registry: $DOCKER_REGISTRY 
+  # The steps that will be executed in the BUILD pipeline
+  steps:
+    #TODO - fill this in with an actual build test rather than noop
+    - script:
+        name: noop
+        code: |
+          echo ""
+
+  # Notify slack of build status
+  after-steps:
+    # Install deps
+    - install-packages:
+        packages: curl
+    # Notify slack
+    - slack-notifier:
+        url: $SLACK_URL
+        channel: notifications
+        username: wercker
+
+deploy:
+  box: 
+    id: $DOCKER_REPO
+    tag: $DOCKER_TAG
+    registry: $DOCKER_REGISTRY 
+  # The steps that will be executed in the DEPLOY pipeline
+  steps:
+    # Copy scripts to work with certs
+    - script:
+        name: copy files
+        code: |
+          cp fetch_certs.sh /letsencrypt/
+          cp recreate_pods.sh /letsencrypt/
+          cp refresh_certs.sh /letsencrypt/
+          cp save_certs.sh /letsencrypt/
+          cp start.sh /letsencrypt/
+
+    # Build & push a container
+    - internal/docker-push:
+        username: $DOCKER_USERNAME
+        password: $DOCKER_PASSWORD
+        tag: $WERCKER_GIT_COMMIT
+        ports: "5000"
+        repository: $DOCKER_REPO
+        registry: $DOCKER_REGISTRY
+        entrypoint: /letsencrypt/start.sh
+
+  # Notify slack of build status
+  after-steps:
+    # Install deps
+    - install-packages:
+        packages: curl
+    # Notify slack
+    - slack-notifier:
+        url: $SLACK_URL
+        channel: notifications
+        username: wercker

@@ -22,12 +22,14 @@ line="$CRON_FREQUENCY $env_vars SECRET_NAME=$SECRET_NAME RC_NAMES='$RC_NAMES' DO
 (crontab -u root -l; echo "$line" ) | crontab -u root -
 
 if [ -n "${LETSENCRYPT_ENDPOINT+1}" ]; then
-    echo "server = $LETSENCRYPT_ENDPOINT" >> /etc/letsencrypt/cli.ini
+  echo "server = $LETSENCRYPT_ENDPOINT" > /etc/letsencrypt/cli.ini
+else
+  LETSENCRYPT_ENDPOINT="https://acme-v01.api.letsencrypt.org/directory"
+  echo "server = $LETSENCRYPT_ENDPOINT" > /etc/letsencrypt/cli.ini
 fi
 
 # Start cron
 echo "Starting cron..."
 cron &
 
-echo "Starting nginx..."
-nginx -g 'daemon off;'
+sleep infinity

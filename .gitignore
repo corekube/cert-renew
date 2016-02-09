@@ -1,3 +1,4 @@
 _*
 *.Session
-default-sa.yaml
+*cert-renew-rc.yaml
+*default-sa.yaml

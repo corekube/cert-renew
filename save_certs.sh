@@ -15,20 +15,27 @@ if [ -z "$SECRET_NAME" ]; then
     exit 1
 fi
 
-CERT_DIR='/etc/letsencrypt/live'
+LETSENCRYPT_DATA='/etc/letsencrypt'
+CERT_DIR="$LETSENCRYPT_DATA/live"
 
 DOMAINS=($DOMAINS)
 
 DOMAIN=${DOMAINS[0]}
 
 FULLCHAIN=$(cat $CERT_DIR/$DOMAIN/fullchain.pem | base64 --wrap=0)
-CERT=$(cat $CERT_DIR/$DOMAIN/cert | base64 --wrap=0)
+CERT=$(cat $CERT_DIR/$DOMAIN/cert.pem | base64 --wrap=0)
 KEY=$(cat $CERT_DIR/$DOMAIN/privkey.pem | base64 --wrap=0)
 #DHPARAM=$(openssl dhparam 2048 | base64 --wrap=0)
-DHPARAM=$CERT_DIR/dhparams.pem
-CHAIN=$CERT_DIR/chain.pem
+DHPARAMS=$(cat $LETSENCRYPT_DATA/dhparams.pem | base64 --wrap=0)
+CHAIN=$(cat $CERT_DIR/$DOMAIN/chain.pem | base64 --wrap=0)
 
-kubectl get secrets $SECRET_NAME && ACTION=replace || ACTION=create;
+# perform actions on user-provided $NAMESPACE, or if not given, use this Pod's
+# namespace as the default
+MY_NAMESPACE=`kubectl get --all-namespaces po | grep $HOSTNAME | awk '{print $1}'`
+NAMESPACE=${NAMESPACE:-$MY_NAMESPACE}
+
+# look up secret, if successful, we're replacing secret, if not creating it
+kubectl get --namespace=$NAMESPACE secrets $SECRET_NAME && ACTION=replace || ACTION=create;
 
 cat << EOF | kubectl $ACTION -f -
  apiVersion: v1
@@ -41,6 +48,6 @@ cat << EOF | kubectl $ACTION -f -
    fullchain.pem: "$FULLCHAIN"
    cert.pem: "$CERT"
    privkey.pem: "$KEY"
-   dhparams.pem: "$DH"
+   dhparams.pem: "$DHPARAMS"
    chain.pem: "$CHAIN"
 EOF

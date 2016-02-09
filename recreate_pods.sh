@@ -12,10 +12,15 @@ if [ -z "$RC_NAMES" ]; then
     exit
 fi
 
+# perform actions on user-provided $NAMESPACE, or if not given, use this Pod's
+# namespace as the default
+MY_NAMESPACE=`kubectl get --all-namespaces po | grep $HOSTNAME | awk '{print $1}'`
+NAMESPACE=${NAMESPACE:-$MY_NAMESPACE}
+
 RC_NAMES=(${RC_NAMES})
 
 for RC_NAME in "${RC_NAMES[@]}"
 do
-    IMAGE=$(kubectl get rc $RC_NAME -o=template --template='{{index .spec.template.spec.containers 0 "image"}}')
-    kubectl rolling-update $RC_NAME --image=$IMAGE --update-period=5s
+    IMAGE=$(kubectl get --namespace=$NAMESPACE rc $RC_NAME -o=template --template='{{index .spec.template.spec.containers 0 "image"}}')
+    kubectl rolling-update --namespace=$NAMESPACE $RC_NAME --image=$IMAGE --update-period=5s
 done

@@ -1,8 +1,7 @@
-FROM nginx
+FROM debian:jessie
 
 RUN apt-get update && apt-get install -y git wget cron bc
 
-RUN mkdir -p /letsencrypt/challenges/.well-known/acme-challenge
 RUN git clone https://github.com/letsencrypt/letsencrypt /letsencrypt/app
 WORKDIR /letsencrypt/app
 RUN ./letsencrypt-auto; exit 0
@@ -14,6 +13,4 @@ RUN mv kubectl /usr/local/bin/
 
 RUN ln -s /root/.local/share/letsencrypt/bin/letsencrypt /usr/local/bin/letsencrypt
 
-WORKDIR /letsencrypt
-
-ENTRYPOINT ./start.sh
+CMD ["/letsencrypt/start.sh"]

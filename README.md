@@ -8,7 +8,7 @@ that does not use nginx, and therefore, does not directly serve the ACME request
 it lets a server container, one that is serving the Domain via nginx, to handle the ACME request while leveraging a volume mounted at /etc/letsencrypt that contains all the relevent cert data.
 cert-renew also mounts this same volume as the server container at /etc/letsencrypt and uses it to perform the cert renewal steps and k8s Secret generation.
 
-Decoupling the container serving the Domain from the the cert-renew container issuing the
+Decoupling the container serving the Domain from the cert-renew container issuing the
 renewals allows for the clear separation of responsibilities, and allows for the creation & usage of a shared, housing volume for the letsencrypt data.
 
 ## Purpose

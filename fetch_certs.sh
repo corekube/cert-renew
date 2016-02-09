@@ -16,12 +16,14 @@ fi
 domain_args=""
 for i in "${DOMAINS[@]}"
 do
-   domain_args="$domain_args -d $i"
-   # do whatever on $i
+    domain_args="$domain_args -d $i"
+    # do whatever on $i
 done
 
 /usr/local/bin/letsencrypt certonly \
-    --webroot -w /letsencrypt/challenges/ \
-    --text --renew-by-default --agree-tos \
-      $domain_args \
-     --email=$EMAIL
+    --authenticator webroot \
+    --webroot-path /etc/letsencrypt/webrootauth/ \
+    --email $EMAIL \
+    --renew-by-default \
+    $domain_args \
+    --agree-tos
