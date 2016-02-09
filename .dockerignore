@@ -1,0 +1,4 @@
+k8s/*
+wercker.yml
+_*
+*.Session
