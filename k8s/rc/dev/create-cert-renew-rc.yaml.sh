@@ -22,25 +22,20 @@ cat > cert-renew-rc.yaml << EOF
        containers:
          - name: cert-renew
            image: ${DOCKER_REPO}:${WERCKER_GIT_COMMIT}
-           env:
-             - name: DOMAINS
-               value: ${DOMAINS}
-             - name: EMAIL
-               value: ${EMAIL}
-             - name: RC_NAMES
-               value: ${RC_NAMES}
-             - name: SECRET_NAME
-               value: ${SECRET_NAME}
-             - name: LETSENCRYPT_ENDPOINT
-               value: ${LETSENCRYPT_ENDPOINT}
            volumeMounts:
-             - name: cert-renew-letsencrypt-pvc
-               mountPath: /etc/letsencrypt
+             - name: cert-renew-config-secret
+               mountPath: /etc/cert-renew-config-secret
+               readOnly: true
+             - name: cert-renew-nfs-pvc
+               mountPath: /srv/
                readOnly: false
        imagePullSecrets:
          - name: cert-renew-registry-secret
        volumes:
-         - name: cert-renew-letsencrypt-pvc
+         - name: cert-renew-config-secret
+           secret:
+             secretName: cert-renew-config-secret
+         - name: cert-renew-nfs-pvc
            persistentVolumeClaim:
-             claimName: cert-renew-letsencrypt-pvc
+             claimName: cert-renew-nfs-pvc
 EOF

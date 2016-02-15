@@ -1,5 +1,10 @@
 #!/bin/bash
 
+## setup
+# soft link /etc/letsencrypt locally from /srv/ volume mount
+ln -s /srv/etc/letsencrypt /etc/letsencrypt
+source /etc/cert-renew-config-secret/env
+
 # Add a cron line with details of the current user etc
 minute=$(echo $RANDOM % 60 | bc)
 hour=$(echo $RANDOM % 23 | bc)

@@ -1,5 +1,9 @@
 #!/bin/bash
 
+set -o errexit
+set -o nounset
+set -o pipefail
+
 # $DOMAINS should contain all domains that this container is responsible for
 # renewing. The first one dictates where the cert will live.
 
@@ -9,6 +13,9 @@
 #
 # We want to convert fullchain.pem into proxycert
 # and privkey.pem into proxykey and then save as a secret!
+
+## setup
+source /etc/cert-renew-config-secret/env
 
 if [ -z "$SECRET_NAME" ]; then
     echo "ERROR: Secret name is empty or unset"
@@ -37,7 +44,9 @@ NAMESPACE=${NAMESPACE:-$MY_NAMESPACE}
 # look up secret, if successful, we're replacing secret, if not creating it
 kubectl get --namespace=$NAMESPACE secrets $SECRET_NAME && ACTION=replace || ACTION=create;
 
-cat << EOF | kubectl $ACTION -f -
+NEW_SECRET_PATH=/tmp/new-secret.yaml
+
+cat << EOF > $NEW_SECRET_PATH
  apiVersion: v1
  kind: Secret
  metadata:
@@ -51,3 +60,8 @@ cat << EOF | kubectl $ACTION -f -
    dhparams.pem: "$DHPARAMS"
    chain.pem: "$CHAIN"
 EOF
+
+kubectl $ACTION -f $NEW_SECRET_PATH
+
+# copy over new secret to SECRET_OUTPUT_PATH provided in /etc/cert-renew-config-secret/env
+cp -r $NEW_SECRET_PATH $SECRET_OUTPUT_PATH

@@ -2,3 +2,4 @@ _*
 *.Session
 *cert-renew-rc.yaml
 *default-sa.yaml
+wercker_*

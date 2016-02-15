@@ -1,5 +1,8 @@
 #!/bin/bash
-set -e
+
+set -o errexit
+set -o nounset
+set -o pipefail
 
 if [ -e "/tmp/.letsencrypt-lock" ]
 then

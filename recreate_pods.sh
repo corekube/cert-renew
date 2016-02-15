@@ -1,11 +1,18 @@
 #!/bin/bash
 
+set -o errexit
+set -o nounset
+set -o pipefail
+
 # Delete all pods that are owned by this RC.
 #  - Get the labels that the RC is selecting based on
 #  - Delete all the pods with that set of labels.
 #  - The RC will then recreate the pods.
 #
 # Do this so that the secrets can be remounted.
+
+## setup
+source /etc/cert-renew-config-secret/env
 
 if [ -z "$RC_NAMES" ]; then
     echo "WARNING: RC_NAMES not provided. Secret changes may not be reflected."

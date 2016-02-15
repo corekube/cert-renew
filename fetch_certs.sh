@@ -1,5 +1,12 @@
 #!/bin/bash
 
+set -o errexit
+set -o nounset
+set -o pipefail
+
+## setup
+source /etc/cert-renew-config-secret/env
+
 EMAIL=${EMAIL}
 DOMAINS=(${DOMAINS})
 

@@ -12,5 +12,6 @@ RUN chmod +x kubectl
 RUN mv kubectl /usr/local/bin/
 
 RUN ln -s /root/.local/share/letsencrypt/bin/letsencrypt /usr/local/bin/letsencrypt
+RUN rm -rf /etc/letsencrypt
 
 CMD ["/letsencrypt/start.sh"]
