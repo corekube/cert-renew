@@ -50,15 +50,15 @@ cat << EOF > $NEW_SECRET_PATH
  apiVersion: v1
  kind: Secret
  metadata:
-   name: "$SECRET_NAME"
-   namespace: "$NAMESPACE"
+   name: $SECRET_NAME
+   namespace: $NAMESPACE
  type: Opaque
  data:
-   fullchain.pem: "$FULLCHAIN"
-   cert.pem: "$CERT"
-   privkey.pem: "$KEY"
-   dhparams.pem: "$DHPARAMS"
-   chain.pem: "$CHAIN"
+   fullchain.pem: $FULLCHAIN
+   cert.pem: $CERT
+   privkey.pem: $KEY
+   dhparams.pem: $DHPARAMS
+   chain.pem: $CHAIN
 EOF
 
 kubectl $ACTION -f $NEW_SECRET_PATH
