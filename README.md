@@ -1,15 +1,25 @@
 # cert-renew
 
 A docker image suitable for requesting new certifcates from letsencrypt,
-and storing them in a secret on kubernetes.
+and storing them in a secret on Kubernetes.
 
 This is a fork of [ployst/docker](https://github.com/ployst/docker/tree/master/letsencrypt)
-that does not use nginx, and therefore, does not directly serve the ACME requests for letsencrypt. Rather,
-it lets a server container, one that is serving the Domain via nginx, to handle the ACME request while leveraging a volume mounted at /etc/letsencrypt that contains all the relevent cert data.
-cert-renew also mounts this same volume as the server container at /etc/letsencrypt and uses it to perform the cert renewal steps and k8s Secret generation.
+that does not use nginx, and therefore, does not directly serve the ACME requests for letsencrypt on renawals. Rather,
+it lets a server container, the one that is actually serving on behalf of the Domain such as [corekube/nginx](https://github.com/corekube/nginx), to handle the ACME request.
+
+Upon cert renewal, letsencrypt.org will send an ACME request to server container to handle it - in [corekube/nginx](https://github.com/corekube/nginx), it handles this request using a [pre-existing letsencrypt](https://getcarina.com/docs/tutorials/nginx-with-lets-encrypt/) `/etc/letsencrypt` initialized volume [mounted at /srv](https://github.com/corekube/nginx/blob/master/nginx/proxy_ssl.conf#L55).
+
+This project, cert-renew, also mounts this same pre-existing
+`/etc/letsencrypt` volume at /srv and uses it to perform:
+
+1. The cert renewal steps
+2. Generation & updating of the K8s Secret that the server container uses - in [corekube/nginx](https://github.com/corekube/nginx), this is the `nginx-ssl-secret` used.
+3. Performing a rolling upgrade of the K8s ReplicationController that the
+   server container uses - in [corekube/nginx](https://github.com/corekube/nginx), this is the `nginx-rc` used.
+4. Saving the newly updated K8s Secret for the server container in a designated outpath path that the nginx Pod utilizes.
 
 Decoupling the container serving the Domain from the cert-renew container issuing the
-renewals allows for the clear separation of responsibilities, and allows for the creation & usage of a shared, housing volume for the letsencrypt data.
+renewals, allows for the clear separation of responsibilities, and for the creation & usage of a shared, housing volume for the letsencrypt data between the cert-renew & [corekube/nginx](https://github.com/corekube/nginx) Pods.
 
 ## Purpose
 
