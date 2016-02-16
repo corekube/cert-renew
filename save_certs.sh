@@ -38,8 +38,8 @@ CHAIN=$(cat $CERT_DIR/$DOMAIN/chain.pem | base64 --wrap=0)
 
 # perform actions on user-provided $NAMESPACE, or if not given, use this Pod's
 # namespace as the default
-MY_NAMESPACE=`kubectl get --all-namespaces po | grep $HOSTNAME | awk '{print $1}'`
-NAMESPACE=${NAMESPACE:-$MY_NAMESPACE}
+#MY_NAMESPACE=`kubectl get --all-namespaces po | grep $HOSTNAME | awk '{print $1}'`
+#NAMESPACE=${NAMESPACE:-$MY_NAMESPACE}
 
 # look up secret, if successful, we're replacing secret, if not creating it
 kubectl get --namespace=$NAMESPACE secrets $SECRET_NAME && ACTION=replace || ACTION=create;

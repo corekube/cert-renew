@@ -21,8 +21,8 @@ fi
 
 # perform actions on user-provided $NAMESPACE, or if not given, use this Pod's
 # namespace as the default
-MY_NAMESPACE=`kubectl get --all-namespaces po | grep $HOSTNAME | awk '{print $1}'`
-NAMESPACE=${NAMESPACE:-$MY_NAMESPACE}
+#MY_NAMESPACE=`kubectl get --all-namespaces po | grep $HOSTNAME | awk '{print $1}'`
+#NAMESPACE=${NAMESPACE:-$MY_NAMESPACE}
 
 RC_NAMES=(${RC_NAMES})
 

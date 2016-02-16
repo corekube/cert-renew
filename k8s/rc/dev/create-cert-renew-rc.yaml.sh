@@ -7,7 +7,7 @@ cat > cert-renew-rc.yaml << EOF
    name: cert-renew-rc
    labels:
      name: cert-renew-rc
-   namespace: dev
+   namespace: cert-renew-dev
  spec:
    replicas: 1
    selector:
@@ -29,8 +29,6 @@ cat > cert-renew-rc.yaml << EOF
              - name: cert-renew-nfs-pvc
                mountPath: /srv/
                readOnly: false
-       imagePullSecrets:
-         - name: cert-renew-registry-secret
        volumes:
          - name: cert-renew-config-secret
            secret:
