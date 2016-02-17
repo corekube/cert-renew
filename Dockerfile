@@ -4,6 +4,7 @@ RUN apt-get update && apt-get install -y git wget cron bc
 
 RUN git clone https://github.com/letsencrypt/letsencrypt /letsencrypt/app
 WORKDIR /letsencrypt/app
+RUN git pull && git checkout -b v0.4.0 tags/v0.4.0
 RUN ./letsencrypt-auto; exit 0
 
 # Install kubectl
