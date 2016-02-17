@@ -62,6 +62,3 @@ cat << EOF > $NEW_SECRET_PATH
 EOF
 
 kubectl $ACTION -f $NEW_SECRET_PATH
-
-# copy over new secret to SECRET_OUTPUT_PATH provided in /etc/cert-renew-config-secret/env
-cp -r $NEW_SECRET_PATH $SECRET_OUTPUT_PATH
