@@ -3,6 +3,7 @@ build:
     id: $DOCKER_REPO
     tag: $DOCKER_TAG
     registry: $DOCKER_REGISTRY 
+    entrypoint: /bin/bash -c
   # The steps that will be executed in the BUILD pipeline
   steps:
     #TODO - fill this in with an actual build test rather than noop
@@ -27,6 +28,7 @@ deploy:
     id: $DOCKER_REPO
     tag: $DOCKER_TAG
     registry: $DOCKER_REGISTRY 
+    entrypoint: /bin/bash -c
   # The steps that will be executed in the DEPLOY pipeline
   steps:
     # Copy scripts to work with certs
@@ -47,7 +49,7 @@ deploy:
         ports: "5000"
         repository: $DOCKER_REPO
         registry: $DOCKER_REGISTRY
-        entrypoint: /letsencrypt/start.sh
+        cmd: /letsencrypt/start.sh
 
   # Notify slack of build status
   after-steps:
