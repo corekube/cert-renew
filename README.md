@@ -27,13 +27,15 @@ renewals, allows for the clear separation of responsibilities, and for the creat
 
 Once this container is running you can generate new certificates using:
 
-kubectl exec -it \<pod\> /bin/bash -- -c 'EMAIL=joe@example.com DOMAINS=example.com foo.example.com ./fetch_certs.sh'
+kubectl exec -it \<POD\> -- /bin/bash -c 'EMAIL=joe@example.com DOMAINS=example.com foo.example.com ./fetch_certs.sh'
 
+### Save the set of certificates as a K8s Secret
 
-### Save the set of certificates as a secret
+kubectl exec -it \<POD\> -- /bin/bash -c 'EMAIL=joe@example.com DOMAINS=example.com foo.example.com RC_NAMES=foobar-rc SECRET_NAME=foobar-ssl-secret ./save_certs.sh'
 
-kubectl exec -it \<pod\> /bin/bash -- -c 'DOMAINS=example.com foo.example.com ./save_certs.sh'
+### Perform a rolling-upgrade on the ReplicationController utilizing the K8s Secret
 
+kubectl exec -it \<POD\> -- /bin/bash -c 'RC_NAMES=foobar-rc NAMESPACE=default ./recreate_pods.sh'
 
 ## Environment variables:
 
@@ -52,7 +54,5 @@ kubectl exec -it \<pod\> /bin/bash -- -c 'DOMAINS=example.com foo.example.com ./
   - i.e. SECRET_NAME=foobar-ssl-secret
  - NAMESPACE - the name of the namespace where the RC_NAMES exist
   - i.e. NAMESPACE=default
- - SECRET_OUTPUT_PATH - the file to write the new secret to
-  - i.e. SECRET_OUTPUT_PATH=/some/output/dir/ssl-secret.yaml
  - CRON_FREQUENCY - the 5-part frequency of the cron job. Default is a random
    time in the range `0-59 0-23 1-27 * *`
