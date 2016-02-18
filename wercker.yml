@@ -2,7 +2,6 @@ build:
   box: 
     id: $DOCKER_REPO
     tag: $DOCKER_TAG
-    registry: $DOCKER_REGISTRY 
     entrypoint: /bin/bash -c
   # The steps that will be executed in the BUILD pipeline
   steps:
@@ -27,7 +26,6 @@ deploy:
   box: 
     id: $DOCKER_REPO
     tag: $DOCKER_TAG
-    registry: $DOCKER_REGISTRY 
     entrypoint: /bin/bash -c
   # The steps that will be executed in the DEPLOY pipeline
   steps:
