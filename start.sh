@@ -25,7 +25,7 @@ env_vars="PATH=$PATH KUBERNETES_PORT=$KUBERNETES_PORT KUBERNETES_PORT_443_TCP_PO
 
 line="$CRON_FREQUENCY $env_vars SECRET_NAME=$SECRET_NAME RC_NAMES='$RC_NAMES' DOMAINS='$DOMAINS' EMAIL=$EMAIL /bin/bash /letsencrypt/refresh_certs.sh >> /var/log/cron-encrypt.log 2>&1"
 
-if [ -n "${CRON_FREQUENCY}" ]; then
+if [ "${CRON_FREQUENCY}" != "none" ]; then
   (crontab -u root -l; echo "$line" ) | crontab -u root -
   # Start cron
   echo "Starting cron..."
