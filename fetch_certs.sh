@@ -27,8 +27,11 @@ do
     # do whatever on $i
 done
 
+LETSENCRYPT_ENDPOINT=${LETSENCRYPT_ENDPOINT:-"https://acme-v01.api.letsencrypt.org/directory"}
+
 /usr/local/bin/letsencrypt certonly \
     --authenticator webroot \
+    --server $LETSENCRYPT_ENDPOINT
     --webroot-path /etc/letsencrypt/webrootauth/ \
     --email $EMAIL \
     --renew-by-default \

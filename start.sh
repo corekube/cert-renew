@@ -26,13 +26,6 @@ env_vars="PATH=$PATH KUBERNETES_PORT=$KUBERNETES_PORT KUBERNETES_PORT_443_TCP_PO
 line="$CRON_FREQUENCY $env_vars SECRET_NAME=$SECRET_NAME RC_NAMES='$RC_NAMES' DOMAINS='$DOMAINS' EMAIL=$EMAIL /bin/bash /letsencrypt/refresh_certs.sh >> /var/log/cron-encrypt.log 2>&1"
 (crontab -u root -l; echo "$line" ) | crontab -u root -
 
-if [ -n "${LETSENCRYPT_ENDPOINT+1}" ]; then
-  echo "server = $LETSENCRYPT_ENDPOINT" > /etc/letsencrypt/cli.ini
-else
-  LETSENCRYPT_ENDPOINT="https://acme-v01.api.letsencrypt.org/directory"
-  echo "server = $LETSENCRYPT_ENDPOINT" > /etc/letsencrypt/cli.ini
-fi
-
 # Start cron
 echo "Starting cron..."
 cron &
