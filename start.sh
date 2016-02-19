@@ -24,10 +24,16 @@ echo "CRON frequency: " $CRON_FREQUENCY
 env_vars="PATH=$PATH KUBERNETES_PORT=$KUBERNETES_PORT KUBERNETES_PORT_443_TCP_PORT=$KUBERNETES_PORT_443_TCP_PORT KUBERNETES_SERVICE_PORT=$KUBERNETES_SERVICE_PORT KUBERNETES_SERVICE_HOST=$KUBERNETES_SERVICE_HOST KUBERNETES_PORT_443_TCP_PROTO=$KUBERNETES_PORT_443_TCP_PROTO KUBERNETES_PORT_443_TCP_ADDR=$KUBERNETES_PORT_443_TCP_ADDR KUBERNETES_PORT_443_TCP=$KUBERNETES_PORT_443_TCP"
 
 line="$CRON_FREQUENCY $env_vars SECRET_NAME=$SECRET_NAME RC_NAMES='$RC_NAMES' DOMAINS='$DOMAINS' EMAIL=$EMAIL /bin/bash /letsencrypt/refresh_certs.sh >> /var/log/cron-encrypt.log 2>&1"
-(crontab -u root -l; echo "$line" ) | crontab -u root -
 
-# Start cron
-echo "Starting cron..."
-cron &
+if [ -n "${CRON_FREQUENCY}" ]; then
+  (crontab -u root -l; echo "$line" ) | crontab -u root -
+  # Start cron
+  echo "Starting cron..."
+  cron &
+else
+  echo $line > /tmp/cron-entry
+  echo "Not starting cron since it was specifically not set."
+  echo "Just sleeping infinitely..."
+fi
 
 sleep infinity
