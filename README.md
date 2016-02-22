@@ -1,25 +1,44 @@
 # cert-renew
 
-A docker image suitable for requesting new certifcates from letsencrypt,
-and storing them in a secret on Kubernetes.
+A Docker image that is deployed on Kubernetes to auto-renew the [letsencrypt.org](https://letsencrypt.org) SSL/TLS certificates via cron, and perform a rolling-update to the ReplicationController(s) depending on them.
 
 This is a fork of [ployst/docker](https://github.com/ployst/docker/tree/master/letsencrypt)
-that does not use nginx, and therefore, does not directly serve the ACME requests for letsencrypt on renawals. Rather,
-it lets a server container, the one that is actually serving on behalf of the Domain such as [corekube/nginx](https://github.com/corekube/nginx), to handle the ACME request.
+that does not use nginx, and therefore, does not directly handle the ACME requests sent by [letsencrypt.org](https://letsencrypt.org) on renawals.
 
-Upon cert renewal, letsencrypt.org will send an ACME request to server container to handle it - in [corekube/nginx](https://github.com/corekube/nginx), it handles this request using a [pre-existing letsencrypt](https://getcarina.com/docs/tutorials/nginx-with-lets-encrypt/) `/etc/letsencrypt` initialized volume [mounted at /srv](https://github.com/corekube/nginx/blob/master/nginx/proxy_ssl.conf#L55).
+Rather, it lets a webserver container, the one that is actually serving content on behalf of the Domain, such as [corekube/nginx](https://github.com/corekube/nginx), to handle the ACME request so that this container is only concerned with updating the certs and propogating any changes across the Kubernetes cluster.
 
-This project, cert-renew, also mounts this same pre-existing
-`/etc/letsencrypt` volume at /srv and uses it to perform:
+This image renews the certs automatically, given that:
 
-1. The cert renewal steps
-2. Generation & updating of the K8s Secret that the server container uses - in [corekube/nginx](https://github.com/corekube/nginx), this is the `nginx-ssl-secret` used.
-3. Performing a rolling upgrade of the K8s ReplicationController that the
-   server container uses - in [corekube/nginx](https://github.com/corekube/nginx), this is the `nginx-rc` used.
-4. Saving the newly updated K8s Secret for the server container in a designated outpath path that the nginx Pod utilizes.
+1. Configuration settings to be used with the letsencrypt tool are provided via a Kubernetes Secret named `cert-renew-config-secret`, defined as such as:
 
-Decoupling the container serving the Domain from the cert-renew container issuing the
-renewals, allows for the clear separation of responsibilities, and for the creation & usage of a shared, housing volume for the letsencrypt data between the cert-renew & [corekube/nginx](https://github.com/corekube/nginx) Pods.
+      ```
+       apiVersion: v1
+       kind: Secret
+       metadata:
+         name: cert-renew-config-secret
+         namespace: cert-renew-<NAMESPACE>
+       type: Opaque
+       data:
+         env: <CONFIG_BASE64>
+      ```
+      where the embedded config data is similar to:
+      
+      ```
+      export DOMAINS='example.com www.example.com'
+      export EMAIL=joe@example.com
+      export RC_NAMES=foobar-rc
+      export SECRET_NAME=foobar-ssl-secret
+      export NAMESPACE=cert-renew-<NAMESPACE>
+      ```
+2. Like [corekube/nginx](https://github.com/corekube/nginx), it also has access to the same pre-existing [letsencrypt.org](https://letsencrypt.org)
+`/etc/letsencrypt` directory to be mounted as a volume in `/srv` as `/srv/etc/letsencrypt` and uses it to perform:
+
+   1. The actual cert renewal steps as defined by [letsencrypt.org](https://letsencrypt.org)
+   2. Generation & updating of the Kubernetes Secret that the webserver container uses - in [corekube/nginx](https://github.com/corekube/nginx), this is the `nginx-ssl-secret` used.
+   3. A `rolling-update` of the Kubernetes ReplicationController(s) that the
+      webserver container uses - in [corekube/nginx](https://github.com/corekube/nginx), this is the `nginx-rc` used.
+
+Decoupling the webserver container serving the Domain's content from the cert-renew container requesting the cert renewals, allows for the clear separation of responsibilities, and for the creation & usage of a shared, housing volume for the letsencrypt data between the cert-renew & [corekube/nginx](https://github.com/corekube/nginx) Pods.
 
 ## Useful commands
 
@@ -27,15 +46,21 @@ renewals, allows for the clear separation of responsibilities, and for the creat
 
 Once this container is running you can generate new certificates using:
 
-kubectl exec -it \<POD\> -- /bin/bash -c 'EMAIL=joe@example.com DOMAINS=example.com foo.example.com ./fetch_certs.sh'
+```
+kubectl exec -it <POD> -- /bin/bash -c "EMAIL=joe@example.com DOMAINS='example.com foo.example.com' ./fetch_certs.sh"
+```
 
 ### Save the set of certificates as a K8s Secret
 
-kubectl exec -it \<POD\> -- /bin/bash -c 'EMAIL=joe@example.com DOMAINS=example.com foo.example.com RC_NAMES=foobar-rc SECRET_NAME=foobar-ssl-secret ./save_certs.sh'
+```
+kubectl exec -it <POD> -- /bin/bash -c "EMAIL=joe@example.com DOMAINS='example.com foo.example.com' RC_NAMES=foobar-rc SECRET_NAME=foobar-ssl-secret ./save_certs.sh"
+```
 
 ### Perform a rolling-upgrade on the ReplicationController utilizing the K8s Secret
 
-kubectl exec -it \<POD\> -- /bin/bash -c 'RC_NAMES=foobar-rc NAMESPACE=default ./recreate_pods.sh'
+```
+kubectl exec -it <POD> -- /bin/bash -c "RC_NAMES=foobar-rc NAMESPACE=default ./recreate_pods.sh"
+```
 
 ## Environment variables:
 
@@ -55,4 +80,4 @@ kubectl exec -it \<POD\> -- /bin/bash -c 'RC_NAMES=foobar-rc NAMESPACE=default .
  - NAMESPACE - the name of the namespace where the RC_NAMES exist
   - i.e. NAMESPACE=default
  - CRON_FREQUENCY - the 5-part frequency of the cron job. Default is a random
-   time in the range `0-59 0-23 1-27 * *`
+   time in the range `0-59 0-23 1-27 * *`. Can also be set to 'none' to disable an entry being added into the crontab
