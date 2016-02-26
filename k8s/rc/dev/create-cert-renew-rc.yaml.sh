@@ -12,12 +12,12 @@ cat > cert-renew-rc.yaml << EOF
    replicas: 1
    selector:
      name: cert-renew
-     deployment: ${WERCKER_GIT_COMMIT}
+     rev: ${WERCKER_GIT_COMMIT}
    template:
      metadata:
        labels:
          name: cert-renew
-         deployment: ${WERCKER_GIT_COMMIT}
+         rev: ${WERCKER_GIT_COMMIT}
      spec:
        containers:
          - name: cert-renew
