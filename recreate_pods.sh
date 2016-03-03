@@ -1,10 +1,6 @@
 #!/bin/bash
 
-set -o errexit
-set -o nounset
-set -o pipefail
-
-# Delete all pods that are owned by this RC.
+# Perform a rolling-update on all pods that are owned by RC.
 #  - Get the labels that the RC is selecting based on
 #  - Delete all the pods with that set of labels.
 #  - The RC will then recreate the pods.
@@ -14,7 +10,7 @@ set -o pipefail
 ## setup
 source /etc/cert-renew-config-secret/env
 
-if [ -z "$RC_NAMES" ]; then
+if [[ -z "$RC_NAMES" ]]; then
     echo "WARNING: RC_NAMES not provided. Secret changes may not be reflected."
     exit
 fi

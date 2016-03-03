@@ -13,9 +13,6 @@ build:
 
   # Notify slack of build status
   after-steps:
-    # Install deps
-    - install-packages:
-        packages: curl
     # Notify slack
     - slack-notifier:
         url: $SLACK_URL
@@ -51,9 +48,6 @@ deploy:
 
   # Notify slack of build status
   after-steps:
-    # Install deps
-    - install-packages:
-        packages: curl
     # Notify slack
     - slack-notifier:
         url: $SLACK_URL

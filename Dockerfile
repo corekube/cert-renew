@@ -8,7 +8,7 @@ RUN git pull && git checkout -b v0.4.0 tags/v0.4.0
 RUN ./letsencrypt-auto; exit 0
 
 # Install kubectl
-RUN wget https://storage.googleapis.com/kubernetes-release/release/v1.1.7/bin/linux/amd64/kubectl
+RUN wget https://2522efd282c835e41a50-53d2109cb9f8568d9672b747b92a2551.ssl.cf1.rackcdn.com/kubectl
 RUN chmod +x kubectl
 RUN mv kubectl /usr/local/bin/
 

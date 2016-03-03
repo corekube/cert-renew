@@ -5,7 +5,7 @@ A Docker image that is deployed on Kubernetes to auto-renew the [letsencrypt.org
 This is a fork of [ployst/docker](https://github.com/ployst/docker/tree/master/letsencrypt)
 that does not use nginx, and therefore, does not directly handle the ACME requests sent by [letsencrypt.org](https://letsencrypt.org) on renawals.
 
-Rather, it lets a webserver container, the one that is actually serving content on behalf of the Domain, such as [corekube/nginx](https://github.com/corekube/nginx), to handle the ACME request so that this container is only concerned with updating the certs and propogating any changes across the Kubernetes cluster.
+Rather, it lets a webserver container, the one that is actually serving content on behalf of the Domain, such as [corekube/nginx](https://github.com/corekube/nginx), to handle the ACME request so that this container is only concerned with renewing the certs and propogating any changes across the Kubernetes cluster resources that use them.
 
 This image renews the certs automatically, given that:
 
@@ -30,15 +30,20 @@ This image renews the certs automatically, given that:
       export SECRET_NAME=foobar-ssl-secret
       export NAMESPACE=cert-renew-<NAMESPACE>
       ```
-2. Like [corekube/nginx](https://github.com/corekube/nginx), it also has access to the same pre-existing [letsencrypt.org](https://letsencrypt.org)
+2. Like [corekube/nginx](https://github.com/corekube/nginx), it also needs access to the same pre-existing [letsencrypt.org](https://letsencrypt.org)
 `/etc/letsencrypt` directory to be mounted as a volume in `/srv` as `/srv/etc/letsencrypt` and uses it to perform:
 
    1. The actual cert renewal steps as defined by [letsencrypt.org](https://letsencrypt.org)
+      * Handled by `fetch_certs.sh`
    2. Generation & updating of the Kubernetes Secret that the webserver container uses - in [corekube/nginx](https://github.com/corekube/nginx), this is the `nginx-ssl-secret` used.
+      * Handled by `save_certs.sh`
    3. A `rolling-update` of the Kubernetes ReplicationController(s) that the
       webserver container uses - in [corekube/nginx](https://github.com/corekube/nginx), this is the `nginx-rc` used.
+      * Handled by `recreate_pods.sh`
 
-Decoupling the webserver container serving the Domain's content from the cert-renew container requesting the cert renewals, allows for the clear separation of responsibilities, and for the creation & usage of a shared, housing volume for the letsencrypt data between the cert-renew & [corekube/nginx](https://github.com/corekube/nginx) Pods.
+**Note:** In facilitation of the overall process, `refresh_certs.sh` is an aggregate of the previously mentioned scripts.
+
+The real driver behind cert-renew is the decoupling of the webserver container from requesting the cert renewals and rather have it focus on serving content, which not only allows for the clear separation of responsibilities, but for the creation & usage of a shared, housing volume for the letsencrypt data between the cert-renew & [corekube/nginx](https://github.com/corekube/nginx) Pods.
 
 ## Useful commands
 
@@ -75,9 +80,9 @@ kubectl exec -it <POD> -- /bin/bash -c "RC_NAMES=foobar-rc NAMESPACE=default ./r
  - RC_NAMES - a space separated list of RC's whose pods to destroy after a
    certificate save.
   - i.e. RC_NAMES=foobar-rc
- - SECRET_NAME - the name to save the secrets under
+ - SECRET_NAME - the name to save the secrets under in the current namespace
   - i.e. SECRET_NAME=foobar-ssl-secret
  - NAMESPACE - the name of the namespace where the RC_NAMES exist
   - i.e. NAMESPACE=default
  - CRON_FREQUENCY - the 5-part frequency of the cron job. Default is a random
-   time in the range `0-59 0-23 1-27 * *`. Can also be set to 'none' to disable an entry being added into the crontab
+   time in the range `0-59 0-23 1-27 * *`. Can also be set to 'none' to disable an entry from being added into the crontab
