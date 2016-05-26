@@ -1,20 +1,26 @@
 FROM debian:jessie
+MAINTAINER Mike Metral "metral@gmail.com"
 
-RUN apt-get update && apt-get install -y git wget cron bc
+RUN apt-get update \
+    && apt-get install -y \
+                        curl \
+                        wget \
+                        openssh-client \
+                        cron \
+                        bc \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN git clone https://github.com/letsencrypt/letsencrypt /letsencrypt/app
-WORKDIR /letsencrypt/app
-RUN git pull && git checkout -b v0.4.0 tags/v0.4.0
-RUN ./letsencrypt-auto; exit 0
-
-# Install kubectl
-RUN wget https://2522efd282c835e41a50-53d2109cb9f8568d9672b747b92a2551.ssl.cf1.rackcdn.com/kubectl
-RUN chmod +x kubectl
-RUN mv kubectl /usr/local/bin/
-
-RUN ln -s /root/.local/share/letsencrypt/bin/letsencrypt /usr/local/bin/letsencrypt
+# setup letsencrypt bot
+RUN wget https://dl.eff.org/certbot-auto
+RUN chmod a+x ./certbot-auto
+RUN echo "y" | DEBIAN_FRONTEND=noninteractive ./certbot-auto; exit 0
+RUN ln -s /root/.local/share/cert-bot/bin/cert-bot /usr/local/bin/cert-bot
 RUN rm -rf /etc/letsencrypt
+WORKDIR /cert-renew
 
-WORKDIR /letsencrypt
+# pull down kubectl
+ENV KUBERNETES_VERSION=1.2.0
+RUN curl -s -o /usr/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v$KUBERNETES_VERSION/bin/linux/amd64/kubectl
+RUN chmod +x /usr/bin/kubectl
 
-CMD ["/letsencrypt/start.sh"]
+CMD ["/bin/bash"]

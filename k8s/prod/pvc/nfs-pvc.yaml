@@ -2,7 +2,6 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: cert-renew-nfs-pvc
-  namespace: cert-renew-prod
 spec:
   accessModes:
     - ReadWriteMany

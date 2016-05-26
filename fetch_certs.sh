@@ -4,8 +4,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-## setup
-source /etc/cert-renew-config-secret/env
+source /etc/config/cert-renew
 
 EMAIL=${EMAIL}
 DOMAINS=(${DOMAINS})
@@ -24,12 +23,9 @@ domain_args=""
 for i in "${DOMAINS[@]}"
 do
     domain_args="$domain_args -d $i"
-    # do whatever on $i
 done
 
-LETSENCRYPT_ENDPOINT=${LETSENCRYPT_ENDPOINT:-"https://acme-v01.api.letsencrypt.org/directory"}
-
-/usr/local/bin/letsencrypt certonly \
+/certbot-auto --no-self-upgrade certonly \
     --authenticator webroot \
     --server $LETSENCRYPT_ENDPOINT \
     --webroot-path /etc/letsencrypt/webrootauth/ \

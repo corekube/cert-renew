@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cert-renew-config
+data:
+  cert-renew: |
+    #!/bin/bash
+
+    export DOMAINS='corekube.com www.corekube.com'
+    export EMAIL="corekube@gmail.com"
+    export LETSENCRYPT_DIR="/srv/etc/letsencrypt"
+    export LETSENCRYPT_ENDPOINT="https://acme-staging.api.letsencrypt.org/directory"
