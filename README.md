@@ -1,88 +1,52 @@
 # cert-renew
 
-A Docker image that is deployed on Kubernetes to auto-renew the [letsencrypt.org](https://letsencrypt.org) SSL/TLS certificates via cron, and perform a rolling-update to the ReplicationController(s) depending on them.
+A Docker image that is deployed on Kubernetes to auto-renew the [letsencrypt.org](https://letsencrypt.org) SSL/TLS certificates stored in a mounted volume, via Cron.
 
-This is a fork of [ployst/docker](https://github.com/ployst/docker/tree/master/letsencrypt)
-that does not use nginx, and therefore, does not directly handle the ACME requests sent by [letsencrypt.org](https://letsencrypt.org) on renawals.
+This project began as a fork of [ployst/docker](https://github.com/ployst/docker/tree/master/letsencrypt)
+that does not use nginx, and therefore, does not directly handle the ACME requests sent by [letsencrypt.org](https://letsencrypt.org) on renawals. Rather, it relies on a separate webserver to handle the LetsEncrypt ACME request so that this microservice is solely focused on renewing the certs.
 
-Rather, it lets a webserver container, the one that is actually serving content on behalf of the Domain, such as [corekube/nginx](https://github.com/corekube/nginx), to handle the ACME request so that this container is only concerned with renewing the certs and propogating any changes across the Kubernetes cluster resources that use them.
+For cert-renew to work, you must provide the following:
 
-This image renews the certs automatically, given that:
-
-1. Configuration settings to be used with the letsencrypt tool are provided via a Kubernetes Secret named `cert-renew-config-secret`, defined as such as:
+- The configuration settings for the LetsEncrypt cert-bot tool, provided in a Kubernetes ConfigMap named `cert-renew-config`, defined as such as:
 
       ```
        apiVersion: v1
-       kind: Secret
+       kind: ConfigMap
        metadata:
-         name: cert-renew-config-secret
-         namespace: cert-renew-<NAMESPACE>
-       type: Opaque
-       data:
-         env: <CONFIG_BASE64>
+         name: cert-renew-config
+       cert-renew: |
+         #!/bin/bash
+         
+         export DOMAINS='example.com www.example.com'
+         export EMAIL=joe@example.com
+         export CRON_FREQUENCY="0 0 1 * *"
+         export LETSENCRYPT_DIR="/srv/etc/letsencrypt"
+         export LETSENCRYPT_ENDPOINT="https://acme-staging.api.letsencrypt.org/directory"
+       
       ```
-      where the embedded config data is similar to:
       
-      ```
-      export DOMAINS='example.com www.example.com'
-      export EMAIL=joe@example.com
-      export RC_NAMES=foobar-rc
-      export SECRET_NAME=foobar-ssl-secret
-      export NAMESPACE=cert-renew-<NAMESPACE>
-      ```
-2. Like [corekube/nginx](https://github.com/corekube/nginx), it also needs access to the same pre-existing [letsencrypt.org](https://letsencrypt.org)
-`/etc/letsencrypt` directory to be mounted as a volume in `/srv` as `/srv/etc/letsencrypt` and uses it to perform:
-
-   1. The actual cert renewal steps as defined by [letsencrypt.org](https://letsencrypt.org)
-      * Handled by `fetch_certs.sh`
-   2. Generation & updating of the Kubernetes Secret that the webserver container uses - in [corekube/nginx](https://github.com/corekube/nginx), this is the `nginx-ssl-secret` used.
-      * Handled by `save_certs.sh`
-   3. A `rolling-update` of the Kubernetes ReplicationController(s) that the
-      webserver container uses - in [corekube/nginx](https://github.com/corekube/nginx), this is the `nginx-rc` used.
-      * Handled by `recreate_pods.sh`
-
-**Note:** In facilitation of the overall process, `refresh_certs.sh` is an aggregate of the previously mentioned scripts.
-
-The real driver behind cert-renew is the decoupling of the webserver container from requesting the cert renewals and rather have it focus on serving content, which not only allows for the clear separation of responsibilities, but for the creation & usage of a shared, housing volume for the letsencrypt data between the cert-renew & [corekube/nginx](https://github.com/corekube/nginx) Pods.
+      Config Options:
+      
+            - DOMAINS - a space separated list of domains to obtain a certificate for, enclosed in single quotes
+                - i.e. DOMAINS='example.com www.example.com'
+            - EMAIL - the email address to obtain certificates on behalf of.
+                - i.e. EMAIL=joe@example.com
+            - CRON_FREQUENCY - optional - the 5-part frequency schedule of the cron job. Default is a random
+               time in the range `0-59 0-23 1-27 * *` if not specified.
+                - i.e. "0 0 1 * *" will renew the certs at midnight on the 1st of every month
+            - LETSENCRYPT_DIR - The path of the mounted volume holding your LetsEncrypt certs. You must supply the full /etc/letsencrypt directory created by LetsEncrypt upon initial cert generation. This project does not handle the initialization of your certs, only their renewal. 
+            - LETSENCRYPT_ENDPOINT - endpoint used to communicate with LetsEncrypt
+                - i.e. testing endpoint: https://acme-staging.api.letsencrypt.org/directory
+                - i.e. live endpoint: https://acme-v01.api.letsencrypt.org/directory
 
 ## Useful commands
 
-### Generate a new set of certs
+### Manually renew the certs
 
 Once this container is running you can generate new certificates using:
 
 ```
-kubectl exec -it <POD> -- /bin/bash -c "EMAIL=joe@example.com DOMAINS='example.com foo.example.com' ./fetch_certs.sh"
+kubectl exec -it <POD> -- /bin/bash -c "EMAIL=joe@example.com DOMAINS='example.com foo.example.com' LETSENCRYPT_DIR="/mycerts/etc/letsencrypt" LETSENCRYPT_ENDPOINT="https://acme-v01.api.letsencrypt.org/directory" ./fetch_certs.sh"
 ```
 
-### Save the set of certificates as a K8s Secret
 
-```
-kubectl exec -it <POD> -- /bin/bash -c "EMAIL=joe@example.com DOMAINS='example.com foo.example.com' RC_NAMES=foobar-rc SECRET_NAME=foobar-ssl-secret ./save_certs.sh"
-```
-
-### Perform a rolling-upgrade on the ReplicationController utilizing the K8s Secret
-
-```
-kubectl exec -it <POD> -- /bin/bash -c "RC_NAMES=foobar-rc NAMESPACE=default ./recreate_pods.sh"
-```
-
-## Environment variables:
-
- - DOMAINS - a space separated list of domains to obtain a certificate for.
-  - i.e. DOMAINS='example.com www.example.com'
- - EMAIL - the email address to obtain certificates on behalf of.
-  - i.e. EMAIL=joe@example.com
- - LETSENCRYPT_ENDPOINT
-   - If set, will be used to populate the /etc/letsencrypt/cli.ini file with
-     the given server value. For testing use
-     https://acme-staging.api.letsencrypt.org/directory
- - RC_NAMES - a space separated list of RC's whose pods to destroy after a
-   certificate save.
-  - i.e. RC_NAMES=foobar-rc
- - SECRET_NAME - the name to save the secrets under in the current namespace
-  - i.e. SECRET_NAME=foobar-ssl-secret
- - NAMESPACE - the name of the namespace where the RC_NAMES exist
-  - i.e. NAMESPACE=default
- - CRON_FREQUENCY - the 5-part frequency of the cron job. Default is a random
-   time in the range `0-59 0-23 1-27 * *`. Can also be set to 'none' to disable an entry from being added into the crontab
