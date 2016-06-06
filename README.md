@@ -3,7 +3,7 @@
 A Docker image that is deployed on Kubernetes to auto-renew the [letsencrypt.org](https://letsencrypt.org) SSL/TLS certificates stored in a mounted volume, via Cron.
 
 This project began as a fork of [ployst/docker](https://github.com/ployst/docker/tree/master/letsencrypt)
-that does not use nginx, and therefore, does not directly handle the ACME requests sent by [letsencrypt.org](https://letsencrypt.org) on renawals. Rather, it relies on a separate webserver to handle the LetsEncrypt ACME request so that this microservice is solely focused on renewing the certs.
+that does not use nginx, and therefore, does not directly handle the ACME requests sent by [letsencrypt.org](https://letsencrypt.org) on renewals. Rather, it relies on a separate webserver to handle the LetsEncrypt ACME request so that this microservice is solely focused on renewing the certs.
 
 For cert-renew to work, you must provide the following:
 
