@@ -18,9 +18,4 @@ RUN ln -s /root/.local/share/cert-bot/bin/cert-bot /usr/local/bin/cert-bot
 RUN rm -rf /etc/letsencrypt
 WORKDIR /cert-renew
 
-# pull down kubectl
-ENV KUBERNETES_VERSION=1.2.0
-RUN curl -s -o /usr/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v$KUBERNETES_VERSION/bin/linux/amd64/kubectl
-RUN chmod +x /usr/bin/kubectl
-
 CMD ["/bin/bash"]
