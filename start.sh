@@ -22,12 +22,9 @@ echo "DOMAINS: " $DOMAINS
 echo "EMAIL: " $EMAIL
 echo "CRON frequency: " "$CRON_FREQUENCY"
 
-# The process running under cron needs to know where the to find the kubernetes api
-env_vars="PATH=$PATH KUBERNETES_PORT=$KUBERNETES_PORT KUBERNETES_PORT_443_TCP_PORT=$KUBERNETES_PORT_443_TCP_PORT KUBERNETES_SERVICE_PORT=$KUBERNETES_SERVICE_PORT KUBERNETES_SERVICE_HOST=$KUBERNETES_SERVICE_HOST KUBERNETES_PORT_443_TCP_PROTO=$KUBERNETES_PORT_443_TCP_PROTO KUBERNETES_PORT_443_TCP_ADDR=$KUBERNETES_PORT_443_TCP_ADDR KUBERNETES_PORT_443_TCP=$KUBERNETES_PORT_443_TCP"
-
 # create the entry and the cron-ready entry
 entry="DOMAINS='$DOMAINS' EMAIL=$EMAIL /bin/bash /cert-renew/fetch_certs.sh >> /var/log/cert-renew.log 2>&1"
-cron_entry="$CRON_FREQUENCY $env_vars $entry"
+cron_entry="$CRON_FREQUENCY $entry"
 
 # enable the entry in cron
 echo ""
