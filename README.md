@@ -1,5 +1,7 @@
 # cert-renew
 
+[![wercker status](https://app.wercker.com/status/cc5e1ccdb78685d6ff38efc8d3620ee1/m "wercker status")](https://app.wercker.com/project/bykey/cc5e1ccdb78685d6ff38efc8d3620ee1)
+
 A Docker image that is deployed on Kubernetes to auto-renew the [letsencrypt.org](https://letsencrypt.org) SSL/TLS certificates stored in a mounted volume, via Cron.
 
 This project began as a fork of [ployst/docker-letsencrypt](https://github.com/ployst/docker-letsencrypt)
