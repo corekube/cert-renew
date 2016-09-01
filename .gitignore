@@ -3,3 +3,4 @@ _*
 *deployment.yaml
 wercker_*
 Dockerfile
+.wercker
