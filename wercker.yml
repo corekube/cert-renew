@@ -1,5 +1,5 @@
 build:
-  box: corekube/cert-renew:0.0.3
+  box: corekube/cert-renew:0.0.4
   # The steps that will be executed in the build pipeline
   steps:
     # Copy scripts to work with certs
@@ -31,7 +31,7 @@ build:
         username: $SLACK_USER
 
 deploy:
-  box: corekube/basics:0.0.3
+  box: corekube/cert-renew:0.0.4
   # The steps that will be executed in the DEPLOY pipeline
 
   # Get host SSH fingerprints
@@ -68,7 +68,7 @@ deploy:
 
 # Stage deploy pipeline
 stage:
-  box: corekube/basics:0.0.3
+  box: corekube/cert-renew:0.0.4
   steps:
   - script:
       name: retreive host fingerprints
@@ -109,7 +109,7 @@ stage:
 
 # Prod deploy pipeline
 prod:
-  box: corekube/basics:0.0.3
+  box: corekube/cert-renew:0.0.4
   steps:
   - script:
       name: retreive host fingerprints

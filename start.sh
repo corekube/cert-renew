@@ -6,7 +6,13 @@ source /etc/config/cert-renew
 ln -sf /dev/stdout /var/log/cert-renew.log
 
 # soft link /etc/letsencrypt locally from $LETSENCRYPT_DIR volume mount
-ln -s $LETSENCRYPT_DIR /etc/letsencrypt
+while [ ! -d "$LETSENCRYPT_DIR" ]
+do
+  sleep 2
+done
+ls -alh $LETSENCRYPT_DIR
+rm -rf /etc/letsencrypt
+ln -s "$LETSENCRYPT_DIR" /etc/
 
 # Once a month, fetch and save certs
 minute=$(echo $RANDOM % 60 | bc)
