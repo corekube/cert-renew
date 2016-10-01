@@ -23,10 +23,9 @@ build:
         repository: $DOCKER_REPO
         entrypoint: /cert-renew/start.sh
 
-  # Notify slack of build status
+  # Notify slack
   after-steps:
-    # Notify slack
-    - slack-notifier:
+    - metral/slack-notifier@1.2.2:
         url: $SLACK_URL
         channel: $SLACK_CHANNEL
         username: $SLACK_USER
@@ -36,7 +35,7 @@ deploy:
   # The steps that will be executed in the DEPLOY pipeline
 
   # Get host SSH fingerprints
-  stage:
+  dev:
     - script:
         name: retreive host fingerprints
         code: |
@@ -63,47 +62,88 @@ deploy:
 
     # rollout
     - script:
-        name: rollout to stage
+        name: rollout to dev
         code: |
-          ./rollout.sh -e stage
+          ./rollout.sh -e dev
 
-  # Prod deploy target
-  prod:
-    - script:
-        name: retreive host fingerprints
-        code: |
-          FP=`TARGET_HOST=$KUBERNETES_MASTER_PUBLIC_IP; file=$(mktemp); ssh-keyscan $TARGET_HOST > $file 2> /dev/null; sed -i '/ssh-ed25519/d' $file; ssh-keygen -l -f $file | awk '{print $2}'`
-          export FP1=$(echo $FP | awk -F " " '{print $1}')
-          export FP2=$(echo $FP | awk -F " " '{print $2}')
+# Stage deploy pipeline
+stage:
+  box: corekube/basics:0.0.3
+  steps:
+  - script:
+      name: retreive host fingerprints
+      code: |
+        FP=`TARGET_HOST=$KUBERNETES_MASTER_PUBLIC_IP; file=$(mktemp); ssh-keyscan $TARGET_HOST > $file 2> /dev/null; sed -i '/ssh-ed25519/d' $file; ssh-keygen -l -f $file | awk '{print $2}'`
+        export FP1=$(echo $FP | awk -F " " '{print $1}')
+        export FP2=$(echo $FP | awk -F " " '{print $2}')
 
-    - add-ssh-key:
-        keyname: KUBERNETES_SSH_KEY
-    - add-to-known_hosts:
-        hostname: $KUBERNETES_MASTER_PUBLIC_IP
-        fingerprint: $FP1
-    - add-to-known_hosts:
-        hostname: $KUBERNETES_MASTER_PUBLIC_IP
-        fingerprint: $FP2
+  - add-ssh-key:
+      keyname: KUBERNETES_SSH_KEY
+  - add-to-known_hosts:
+      hostname: $KUBERNETES_MASTER_PUBLIC_IP
+      fingerprint: $FP1
+  - add-to-known_hosts:
+      hostname: $KUBERNETES_MASTER_PUBLIC_IP
+      fingerprint: $FP2
 
-    # Setup kubectl
-    - script:
-        name: setup kubectl
-        code: |
-          curl -s -o /tmp/setup-kubectl.sh https://gist.githubusercontent.com/metral/ce436c6d70b4324262b8dcbd81ce8f34/raw/57e2f1aa107a6f2d1721aa36b69847b53554db9c/setup-wercker-kubectl.sh
-          chmod +x /tmp/setup-kubectl.sh
-          /tmp/setup-kubectl.sh
+  # Setup kubectl
+  - script:
+      name: setup kubectl
+      code: |
+        curl -s -o /tmp/setup-kubectl.sh https://gist.githubusercontent.com/metral/ce436c6d70b4324262b8dcbd81ce8f34/raw/57e2f1aa107a6f2d1721aa36b69847b53554db9c/setup-wercker-kubectl.sh
+        chmod +x /tmp/setup-kubectl.sh
+        /tmp/setup-kubectl.sh
 
-
-    # rollout
-    - script:
-        name: rollout to prod
-        code: |
-          ./rollout.sh -e prod
+  # rollout
+  - script:
+      name: rollout to stage
+      code: |
+        ./rollout.sh -e stage
 
   # Notify slack of build status
   after-steps:
-    # Notify slack
-    - slack-notifier:
+    - metral/slack-notifier@1.2.2:
+        url: $SLACK_URL
+        channel: $SLACK_CHANNEL
+        username: $SLACK_USER
+
+# Prod deploy pipeline
+prod:
+  box: corekube/basics:0.0.3
+  steps:
+  - script:
+      name: retreive host fingerprints
+      code: |
+        FP=`TARGET_HOST=$KUBERNETES_MASTER_PUBLIC_IP; file=$(mktemp); ssh-keyscan $TARGET_HOST > $file 2> /dev/null; sed -i '/ssh-ed25519/d' $file; ssh-keygen -l -f $file | awk '{print $2}'`
+        export FP1=$(echo $FP | awk -F " " '{print $1}')
+        export FP2=$(echo $FP | awk -F " " '{print $2}')
+
+  - add-ssh-key:
+      keyname: KUBERNETES_SSH_KEY
+  - add-to-known_hosts:
+      hostname: $KUBERNETES_MASTER_PUBLIC_IP
+      fingerprint: $FP1
+  - add-to-known_hosts:
+      hostname: $KUBERNETES_MASTER_PUBLIC_IP
+      fingerprint: $FP2
+
+  # Setup kubectl
+  - script:
+      name: setup kubectl
+      code: |
+        curl -s -o /tmp/setup-kubectl.sh https://gist.githubusercontent.com/metral/ce436c6d70b4324262b8dcbd81ce8f34/raw/57e2f1aa107a6f2d1721aa36b69847b53554db9c/setup-wercker-kubectl.sh
+        chmod +x /tmp/setup-kubectl.sh
+        /tmp/setup-kubectl.sh
+
+  # rollout
+  - script:
+      name: rollout to prod
+      code: |
+        ./rollout.sh -e prod
+
+  # Notify slack of build status
+  after-steps:
+    - metral/slack-notifier@1.2.2:
         url: $SLACK_URL
         channel: $SLACK_CHANNEL
         username: $SLACK_USER

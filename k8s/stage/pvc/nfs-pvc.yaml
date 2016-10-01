@@ -2,6 +2,8 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: cert-renew-nfs-pvc
+  annotations:
+    volume.beta.kubernetes.io/storage-class: slow
 spec:
   accessModes:
     - ReadWriteMany
