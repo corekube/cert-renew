@@ -1,5 +1,5 @@
 build:
-  box: corekube/cert-renew:0.0.5
+  box: corekube/cert-renew:0.0.6
   # The steps that will be executed in the build pipeline
   steps:
     # Copy scripts to work with certs
@@ -31,7 +31,7 @@ build:
         username: $SLACK_USER
 
 deploy:
-  box: corekube/cert-renew:0.0.5
+  box: corekube/cert-renew:0.0.6
   # The steps that will be executed in the DEPLOY pipeline
 
   dev:
@@ -51,7 +51,7 @@ deploy:
 
 # Stage deploy pipeline
 stage:
-  box: corekube/cert-renew:0.0.5
+  box: corekube/cert-renew:0.0.6
   steps:
   # Setup kubectl
   - script:
@@ -76,7 +76,7 @@ stage:
 
 # Prod deploy pipeline
 prod:
-  box: corekube/cert-renew:0.0.5
+  box: corekube/cert-renew:0.0.6
   steps:
   # Setup kubectl
   - script:
