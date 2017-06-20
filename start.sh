@@ -29,7 +29,7 @@ echo "EMAIL: " $EMAIL
 echo "CRON frequency: " "$CRON_FREQUENCY"
 
 # create the entry and the cron-ready entry
-entry="DOMAINS='$DOMAINS' EMAIL=$EMAIL /bin/bash /cert-renew/fetch_certs.sh >> /var/log/cert-renew.log 2>&1"
+entry="DOMAINS='$DOMAINS' EMAIL=$EMAIL /bin/bash /cert-renew/fetch_certs.sh >> /var/log/cert-renew.log 2>&1 ; /bin/bash /cert-renew/refresh_ingress.sh"
 cron_entry="$CRON_FREQUENCY $entry"
 
 # enable the entry in cron
