@@ -8,6 +8,6 @@ data:
 
     export DOMAINS='corekube.com www.corekube.com'
     export EMAIL="corekube@gmail.com"
-    export CRON_FREQUENCY="0 19 1 * *"
+    export CRON_FREQUENCY="0 16 1 * *"
     export LETSENCRYPT_DIR="/srv/etc/letsencrypt"
     export LETSENCRYPT_ENDPOINT="https://acme-v01.api.letsencrypt.org/directory"

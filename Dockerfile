@@ -22,7 +22,7 @@ RUN echo "y" | DEBIAN_FRONTEND=noninteractive ./certbot-auto; exit 0 && \
 RUN echo "Cert-Renew $CERT_RENEW_VERSION" > /root/.built && cat /root/.built
 
 # Pull down kubectl
-ENV KUBERNETES_VERSION=1.4.0
+ENV KUBERNETES_VERSION=1.7.0
 RUN curl -s -o /usr/bin/kubectl https://storage.googleapis.com/kubernetes-release/release/v$KUBERNETES_VERSION/bin/linux/amd64/kubectl && chmod +x /usr/bin/kubectl
 
 WORKDIR /cert-renew
