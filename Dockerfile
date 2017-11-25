@@ -1,5 +1,4 @@
 FROM debian:jessie
-MAINTAINER Mike Metral "metral@gmail.com"
 
 ENV CERT_RENEW_VERSION=v0.0.4
 
